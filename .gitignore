@@ -1,0 +1,9 @@
+\#*
+.\#*
+.*
+!.gitignore
+*.swp
+*~
+*.swo
+$.swn
+.sass-cache
