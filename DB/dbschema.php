@@ -128,7 +128,7 @@ class dbschema
             }
 
             $tmp[$val['Field']]['notnull'] = false;
-            if ($val['NULL'] == 'NO')
+            if (isset($val['NULL']) && $val['NULL'] == 'NO')
             {
                 $tmp[$val['Field']]['notnull'] = true;
             }
@@ -145,6 +145,17 @@ class dbschema
         }
 
         return $tmp;
+    }
+    
+    public function execute($sql)
+    {
+        $result = $this->db->real_query($sql);
+        if(! $result)
+        {
+            throw new \RuntimeException($this->db->error, $this->db->errno);
+        }
+        
+        return $result;
     }
 }
 

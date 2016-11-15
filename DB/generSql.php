@@ -136,12 +136,20 @@ class generSql
     {
         // 比较主键索引
         $sql = '';
-        $masterPrimary = $masterSchema['primary'];
-        $slavePrimary = $slaveSchema['primary'];
+        $masterPrimary = $slavePrimary = [];
+        if(isset($masterSchema['primary']))
+        {
+            $masterPrimary = $masterSchema['primary'];
+        }
+        if(isset($slaveSchema['primary']))
+        {
+            $slavePrimary = $slaveSchema['primary'];
+        }
+        
         if(array_diff($masterPrimary, $slavePrimary) || array_diff($slavePrimary, $masterPrimary))
         {
             $str = "ALTER TABLE `{$tableName}` ADD {$this->createPrimarySql($masterPrimary)}";
-            $str .= ",DROP INDEX `PRIMARY`";
+            $str .= "DROP INDEX `PRIMARY`";
             $sql = $str;
         }
         
@@ -153,8 +161,15 @@ class generSql
     {
         $sql = [];
         
-        $masterIndex = $masterSchema['unique'];
-        $slaveIndex = $slaveSchema['unique'];
+        $masterIndex = $slaveIndex = [];
+        if(isset($masterSchema['unique']))
+        {
+            $masterIndex = $masterSchema['unique'];
+        }
+        if(isset($slaveSchema['unique']))
+        {
+            $slaveIndex = $slaveSchema['unique'];
+        }
         $addIndex = array_diff(array_keys($masterIndex), array_keys($slaveIndex));
         if($addIndex)
         {
@@ -174,8 +189,12 @@ class generSql
         
         foreach ($slaveIndex as $sIndexKey=>$sIndexVal)
         {
-            $alert = array_diff($masterIndex[$sIndexKey], $sIndexVal);
-            $drop = array_diff($sIndexVal, $masterIndex[$sIndexKey]);
+            $alert = $drop = [];
+            if(isset($masterIndex[$sIndexKey]))
+            {
+                $alert = array_diff($masterIndex[$sIndexKey], $sIndexVal);
+                $drop = array_diff($sIndexVal, $masterIndex[$sIndexKey]);
+            }
             if($alert || $drop)
             {
                 $sql[] = "ALTER TABLE `{$tableName}` ADD UNIQUE `{$sIndexKey}` ({$this->createIndexSql($masterIndex[$sIndexKey])}),DROP INDEX `{$sIndexKey}`";
@@ -190,8 +209,17 @@ class generSql
     {
         $sql = [];
         // 比较普通索引
-        $masterIndex = $masterSchema['index'];
-        $slaveIndex = $slaveSchema['index'];
+        $masterIndex = $slaveIndex = [];
+        if(isset($masterSchema['index']))
+        {
+            $masterIndex = $masterSchema['index'];
+        }
+        if(isset($slaveSchema['index']))
+        {
+            $slaveIndex = $slaveSchema['index'];
+        }
+        
+        
         $addIndex = array_diff(array_keys($masterIndex), array_keys($slaveIndex));
         if($addIndex)
         {
@@ -211,8 +239,13 @@ class generSql
         
         foreach ($slaveIndex as $sIndexKey=>$sIndexVal)
         {
-            $alert = array_diff($masterIndex[$sIndexKey], $sIndexVal);
-            $drop = array_diff($sIndexVal, $masterIndex[$sIndexKey]);
+            $alert = $drop = [];
+            if(isset($masterIndex[$sIndexKey]))
+            {
+                $alert = array_diff($masterIndex[$sIndexKey], $sIndexVal);
+                $drop = array_diff($sIndexVal, $masterIndex[$sIndexKey]);
+            }
+            
             if($alert || $drop)
             {
                 $sql[] = "ALTER TABLE `{$tableName}` ADD INDEX `{$sIndexKey}` ({$this->createIndexSql($masterIndex[$sIndexKey])}),DROP INDEX `{$sIndexKey}`";
@@ -238,14 +271,26 @@ class generSql
     // 比较字段
     public function compareTableColumn($masterSchema, $slaveSchema, $tableName)
     {
-        $slaveColumns = $slaveSchema['columns'];
-        $masterColumns = $masterSchema['columns'];
+        $slaveColumns = $masterColumns = [];
+        if($slaveSchema['columns'])
+        {
+            $slaveColumns = $slaveSchema['columns'];
+        }
+        if($masterSchema['columns'])
+        {
+            $masterColumns = $masterSchema['columns'];
+        }
         $diff = [];
         $sql = [];
         foreach ($slaveColumns as $k=>$val)
         {
-            $alert = array_diff($masterColumns[$k], $val);
-            $drop = array_diff($val, $masterColumns[$k]);
+            $alert = $drop = [];
+            if(isset($masterColumns[$k]))
+            {
+                $alert = array_diff($masterColumns[$k], $val);
+                $drop = array_diff($val, $masterColumns[$k]);
+            }
+            
             if($alert || $drop)
             {
                 $str = "ALTER TABLE `{$tableName}` CHANGE `{$k}` ";
@@ -263,9 +308,9 @@ class generSql
             
             foreach ($diffFields['alert'] as $add)
             {
-                $str = "ALTER TABLE `{$tableName}` ADD `{$add}` ";
+                $str = "ALTER TABLE `{$tableName}` ADD ";
                 $str .= $this->createColumnSql($add, $masterColumns[$add]);
-                $sql[] = $str;
+                $sql[] = rtrim($str,',');
             }
         }
         
@@ -292,14 +337,15 @@ class generSql
             $str .=" NOT NULL";
         }
         
-        if($fieldVal['autoincrement'])
+        if(isset($fieldVal['autoincrement']) && $fieldVal['autoincrement'])
         {
             $str .=" AUTO_INCREMENT";
         }
         
         if(isset($fieldVal['default']))
         {
-            $str .=" DEFAULT {$fieldVal['default']}";
+            
+            $str .=" DEFAULT '{$fieldVal['default']}'";
         }
         
         if(isset($fieldVal['comment']))

@@ -35,10 +35,22 @@ class dbaction
     {
         $this->createTable();
         $this->updateTableSchema();
+        $this->exce();
+    }
+    
+    public function exce()
+    {
         $this->proSqls();
-        echo '<pre>';
-        var_dump($this->sql);
-        exit;
+        $sqlArr = $this->sql;
+        foreach ($sqlArr as $sql)
+        {
+            //echo $sql."\n";
+            $rs = $this->getDBStrObj($this->slave)->execute($sql);
+            if($rs)
+            {
+                echo $sql."\n";
+            }
+        }
     }
 
     public function proSqls()
