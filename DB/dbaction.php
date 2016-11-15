@@ -42,15 +42,20 @@ class dbaction
     {
         $this->proSqls();
         $sqlArr = $this->sql;
-        foreach ($sqlArr as $sql)
+        if($sqlArr)
         {
-            //echo $sql."\n";
-            $rs = $this->getDBStrObj($this->slave)->execute($sql);
-            if($rs)
+            foreach ($sqlArr as $sql)
             {
-                echo $sql."\n";
+                //echo $sql."\n";
+                $rs = $this->getDBStrObj($this->slave)->execute($sql);
+                if($rs)
+                {
+                    echo $sql."\n";
+                }
             }
         }
+        
+        echo "Master slave synchronization.\n";
     }
 
     public function proSqls()
